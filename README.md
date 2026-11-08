@@ -25,23 +25,85 @@ A fast, modular, high-performance Python 3.11+ toolkit and CLI designed for solv
 
 ---
 
-## 🚀 Installation
+## Installation
 
-### Using pip / virtual environment (Python 3.11+)
+CryptoKit requires **Python 3.11 or newer** and Git.
+
+### Option 1: Linux (Kali, Ubuntu, Debian)
+
+Copy and run:
 
 ```bash
-git clone https://github.com/example/cryptokit.git
-cd cryptokit
-python -m venv .venv
-
-# Linux / macOS
-source .venv/bin/activate
-# Windows
-.venv\Scripts\activate
-
-# Install in editable mode with dependencies
-pip install -e .
+python3 -m venv cryptokit-env
+source cryptokit-env/bin/activate
+python -m pip install --upgrade pip
+python -m pip install git+https://github.com/ldutta-lovely/cryptokit.git
 ```
+
+### Option 2: Windows (PowerShell)
+
+Copy and run:
+
+```powershell
+py -3 -m venv cryptokit-env
+.\cryptokit-env\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install git+https://github.com/ldutta-lovely/cryptokit.git
+```
+
+### Option 3: macOS
+
+```bash
+python3 -m venv cryptokit-env
+source cryptokit-env/bin/activate
+python -m pip install --upgrade pip
+python -m pip install git+https://github.com/ldutta-lovely/cryptokit.git
+```
+
+### Verify Installation
+
+After installation, run:
+
+```bash
+cryptokit --help
+```
+
+If the command displays the available CryptoKit commands, installation was successful.
+
+For example:
+
+```bash
+cryptokit caesar "Khoor Zruog"
+```
+
+### Developer Installation
+
+If you want to contribute to CryptoKit, run:
+
+```bash
+git clone https://github.com/ldutta-lovely/cryptokit.git
+cd cryptokit
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+python -m pip install -e ".[dev]"
+python -m pytest
+```
+
+On Windows PowerShell, activate the environment using:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+### Requirements
+
+- Python 3.11+
+- Git
+- Internet connection for installation
+
+**Repository:** https://github.com/ldutta-lovely/cryptokit
 
 ### Dependencies
 - `pycryptodome` (cryptographic primitives & ASN.1 PEM generation)
