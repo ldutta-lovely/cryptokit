@@ -8,3 +8,6 @@ __pycache__/
 .vscode/
 dist/
 build/
+
+encrypted_key.pem
+rsa_hash.txt

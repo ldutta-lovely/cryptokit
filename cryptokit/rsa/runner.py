@@ -30,8 +30,11 @@ from cryptokit.rsa.attacks.direct import DirectRSADecrypt
 from cryptokit.rsa.attacks.rabin import RabinAttack
 
 
-def parse_rsa_params(raw_text_or_dict: str | dict[str, Any]) -> dict[str, Any]:
-    """Parse RSA parameters from JSON, key=val definitions, PEM, or dictionary."""
+def parse_rsa_params(
+    raw_text_or_dict: str | dict[str, Any],
+    passphrase: str | bytes | None = None,
+) -> dict[str, Any]:
+    """Parse RSA parameters from JSON, key=value definitions, PEM, or dictionary."""
     if isinstance(raw_text_or_dict, dict):
         return raw_text_or_dict
 
@@ -40,15 +43,22 @@ def parse_rsa_params(raw_text_or_dict: str | dict[str, Any]) -> dict[str, Any]:
     # 1. Check if PEM
     if "-----BEGIN" in text:
         try:
-            key = RSA.import_key(text)
+            key = RSA.import_key(
+                text.encode(),
+                passphrase=passphrase,
+            )
             params: dict[str, Any] = {"n": key.n, "e": key.e}
             if key.has_private():
                 params["d"] = key.d
                 params["p"] = key.p
                 params["q"] = key.q
             return params
-        except Exception:
-            pass
+        except (ValueError, IndexError, TypeError) as exc:
+            if "ENCRYPTED" in text:
+                raise ValueError(
+                    "Unable to import encrypted PEM: check the passphrase "
+                    "and ensure the PEM is valid."
+                ) from exc
 
     # 2. Check if JSON
     if text.startswith("{") and text.endswith("}"):

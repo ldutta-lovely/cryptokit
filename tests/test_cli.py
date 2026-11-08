@@ -54,3 +54,31 @@ def test_cli_auto_json():
     assert result.exit_code == 0
     assert "flag{cli_auto_json_output}" in result.stdout
     assert '"score"' in result.stdout
+
+def test_cli_rsa_calculate():
+    result = runner.invoke(
+        app,
+        ["rsa", "calculate", "--p", "4391", "--q", "6659"],
+    )
+    assert result.exit_code == 0
+    assert "4391" in result.stdout
+    assert "6659" in result.stdout
+    assert "29239669" in result.stdout
+
+
+def test_cli_rsa_calculate_rejects_composite():
+    result = runner.invoke(
+        app,
+        ["rsa", "calculate", "--p", "4", "--q", "6659"],
+    )
+    assert result.exit_code == 1
+    assert "not a prime" in result.stdout
+
+
+def test_cli_rsa_calculate_rejects_equal_primes():
+    result = runner.invoke(
+        app,
+        ["rsa", "calculate", "--p", "7", "--q", "7"],
+    )
+    assert result.exit_code == 1
+    assert "distinct primes" in result.stdout

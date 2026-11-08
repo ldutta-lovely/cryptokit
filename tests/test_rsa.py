@@ -3,6 +3,7 @@
 from Crypto.Util.number import getPrime
 import pytest
 
+from Crypto.PublicKey import RSA
 from cryptokit.utils import bytes_to_long, crt, modinv
 from cryptokit.rsa.attacks.small_e import SmallEAttack
 from cryptokit.rsa.attacks.wiener import WienerAttack
@@ -242,3 +243,34 @@ def test_rsa_runner_and_parsing():
     assert logs["fermat"] == "SUCCESS"
     assert pem is not None
     assert "-----BEGIN RSA PRIVATE KEY-----" in pem
+
+def test_encrypted_pem_with_correct_passphrase():
+    key = RSA.generate(1024)
+    password = "test-password"
+
+    pem = key.export_key(
+        format="PEM",
+        passphrase=password,
+        pkcs=8,
+        protection="PBKDF2WithHMAC-SHA1AndAES128-CBC",
+    ).decode()
+
+    params = parse_rsa_params(pem, passphrase=password)
+
+    assert params["n"] == key.n
+    assert params["e"] == key.e
+    assert params["d"] == key.d
+
+
+def test_encrypted_pem_with_wrong_passphrase():
+    key = RSA.generate(1024)
+
+    pem = key.export_key(
+        format="PEM",
+        passphrase="correct-password",
+        pkcs=8,
+        protection="PBKDF2WithHMAC-SHA1AndAES128-CBC",
+    ).decode()
+
+    with pytest.raises(ValueError, match="encrypted PEM"):
+        parse_rsa_params(pem, passphrase="wrong-password")

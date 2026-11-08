@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Annotated, Any, Optional
+from getpass import getpass
 
 if sys.platform == "win32":
     if sys.stdout is not None and hasattr(sys.stdout, "reconfigure"):
@@ -298,6 +299,81 @@ def cmd_railfence(
 
 
 # --- RSA Subcommands ---
+
+@rsa_app.command("inspect-pem")
+def cmd_rsa_inspect_pem(
+    pem_file: Annotated[Path, typer.Argument(help="Path to RSA PEM file")],
+) -> None:
+    """Inspect an RSA PEM file, including encrypted private keys."""
+
+    if not pem_file.is_file():
+        console.print(f"[bold red]Error:[/bold red] File not found: {pem_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        content = pem_file.read_text(encoding="utf-8")
+        password = getpass("Enter PEM passphrase (press Enter if unencrypted): ")
+
+        from cryptokit.rsa.runner import parse_rsa_params
+
+        params = parse_rsa_params(
+            content,
+            passphrase=password or None,
+        )
+
+        table = Table(title="RSA PEM Inspection")
+        table.add_column("Parameter", style="cyan")
+        table.add_column("Value", style="green")
+
+        table.add_row("Modulus (n)", str(params["n"]))
+        table.add_row("Public exponent (e)", str(params["e"]))
+        table.add_row(
+            "Private key",
+            "Available" if "d" in params else "Not available",
+        )
+
+        console.print(table)
+        console.print("[bold green]PEM imported successfully.[/bold green]")
+
+    except (ValueError, KeyError, OSError) as err:
+        console.print(f"[bold red]PEM inspection failed:[/bold red] {err}")
+        raise typer.Exit(code=1)
+
+@rsa_app.command("calculate")
+def cmd_rsa_calculate(
+    p: Annotated[int, typer.Option("--p", help="First RSA prime number")],
+    q: Annotated[int, typer.Option("--q", help="Second RSA prime number")],
+) -> None:
+    """Calculate the RSA modulus n from two prime numbers."""
+    from sympy import isprime
+
+    if p <= 1 or q <= 1:
+        console.print("[bold red]Error:[/bold red] p and q must be greater than 1.")
+        raise typer.Exit(code=1)
+
+    if not isprime(p):
+        console.print(f"[bold red]Error:[/bold red] p={p} is not a prime number.")
+        raise typer.Exit(code=1)
+
+    if not isprime(q):
+        console.print(f"[bold red]Error:[/bold red] q={q} is not a prime number.")
+        raise typer.Exit(code=1)
+
+    if p == q:
+        console.print("[bold red]Error:[/bold red] p and q must be distinct primes.")
+        raise typer.Exit(code=1)
+
+    n = p * q
+
+    table = Table(title="RSA Modulus Calculation")
+    table.add_column("Parameter", style="cyan")
+    table.add_column("Value", style="green")
+
+    table.add_row("p", str(p))
+    table.add_row("q", str(q))
+    table.add_row("n = p × q", str(n))
+
+    console.print(table)
 
 @rsa_app.command("auto")
 def cmd_rsa_auto(
